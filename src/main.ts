@@ -88,33 +88,37 @@ function logDebugDetails(outcome: Outcome): void {
 
 /** ─── Entry point ───────────────────────────────────────────────────────── */
 
-try {
-  const outcome = evaluateJobs(
-    core.getInput("jobs", { required: true }),
-    core.getInput("allowed-to-skip"),
-    core.getInput("allowed-to-cancel"),
-    core.getInput("allowed-to-fail"),
-  );
-
-  // Write step summary (best-effort — a failure here is logged but not fatal).
-  if (core.getBooleanInput("summary")) {
-    await writeSummary(outcome).catch((err) =>
-      core.warning(`are-we-good: Failed to write step summary: ${err}`),
+async function main(): Promise<void> {
+  try {
+    const outcome = evaluateJobs(
+      core.getInput("jobs", { required: true }),
+      core.getInput("allowed-to-skip"),
+      core.getInput("allowed-to-cancel"),
+      core.getInput("allowed-to-fail"),
     );
-  }
 
-  if (core.isDebug()) {
-    logDebugDetails(outcome);
-  }
+    // Write step summary (best-effort — a failure here is logged but not fatal).
+    if (core.getBooleanInput("summary")) {
+      await writeSummary(outcome).catch((err) =>
+        core.warning(`are-we-good: Failed to write step summary: ${err}`),
+      );
+    }
 
-  core.setOutput("result", outcome.result);
-  core.setOutput("are-we-good", outcome.result === "success" ? "true" : "false");
+    if (core.isDebug()) {
+      logDebugDetails(outcome);
+    }
 
-  if (outcome.result === "success") {
-    core.info(outcome.message);
-  } else {
-    core.setFailed(outcome.message);
+    core.setOutput("result", outcome.result);
+    core.setOutput("are-we-good", outcome.result === "success" ? "true" : "false");
+
+    if (outcome.result === "success") {
+      core.info(outcome.message);
+    } else {
+      core.setFailed(outcome.message);
+    }
+  } catch (err) {
+    core.setFailed(`are-we-good: ${err}`);
   }
-} catch (err) {
-  core.setFailed(`are-we-good: ${err}`);
 }
+
+void main();
