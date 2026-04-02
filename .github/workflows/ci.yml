@@ -11,7 +11,7 @@ permissions: {}
 jobs:
   build-test:
     name: Build & Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     steps:
@@ -48,7 +48,8 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-slim
+    # zizmor-action uses Docker and requires a runner with a Docker daemon.
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
