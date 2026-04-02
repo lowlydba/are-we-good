@@ -111,7 +111,8 @@ const NOT_GOOD_BANNER = [
 function printFinalBanner(result: "success" | "failure"): void {
   const banner = result === "success" ? GOOD_BANNER : NOT_GOOD_BANNER;
   const color = result === "success" ? ANSI_GREEN : ANSI_RED;
-  console.log(`\n${color}${banner.join("\n")}${ANSI_RESET}`);
+  const coloredBanner = banner.map((line) => `${color}${line}${ANSI_RESET}`).join("\n");
+  console.log(`\n${coloredBanner}`);
 }
 
 /** ─── Entry point ───────────────────────────────────────────────────────── */
