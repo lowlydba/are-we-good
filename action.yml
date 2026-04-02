@@ -1,9 +1,11 @@
 name: are-we-good
 description: >
-  Rolls up multiple GitHub Actions job statuses into a single status check.
-  Run this as a final job (with needs: [...]) so branch protection only needs
-  one required status check instead of listing every matrix job.
+  Rolls up GitHub Actions job statuses into one check. Run as a final job
+  so branch protection only needs one required check.
 author: lowlydba
+branding:
+  icon: check-circle
+  color: green
 
 inputs:
   jobs:
