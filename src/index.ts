@@ -13,7 +13,12 @@ import type { WorkflowJob } from "@octokit/webhooks-types";
 /** Upstream GitHub workflow-job conclusions (excluding null while in-progress). */
 type JobResult = NonNullable<WorkflowJob["conclusion"]>;
 
-const VALID_JOB_RESULTS = ["success", "failure", "cancelled", "skipped"] as const satisfies ReadonlyArray<JobResult>;
+const VALID_JOB_RESULTS = [
+  "success",
+  "failure",
+  "cancelled",
+  "skipped",
+] as const satisfies ReadonlyArray<JobResult>;
 
 /** One entry in the object returned by `toJSON(needs)`. */
 interface JobStatus {
@@ -126,9 +131,7 @@ function parseJobsContext(raw: string): JobsContext {
 
     const result = (value as { result?: unknown }).result;
     if (typeof result !== "string" || !isJobResult(result)) {
-      throw new Error(
-        `'jobs.${name}.result' must be one of: ${VALID_JOB_RESULTS.join(", ")}.`,
-      );
+      throw new Error(`'jobs.${name}.result' must be one of: ${VALID_JOB_RESULTS.join(", ")}.`);
     }
 
     normalized[name] = { result };

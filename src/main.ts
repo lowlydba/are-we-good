@@ -44,7 +44,7 @@ async function writeSummary(outcome: Outcome): Promise<void> {
     const emoji = RESULT_EMOJI[d.result] ?? "❓";
     const note = acceptanceNote(d);
     const status = d.acceptable ? (note ? `✅ ${note}` : "✅ passed") : "❌ failed";
-    return [`\`${d.name}\``, `${emoji} ${d.result}`, status];
+    return [d.name, `${emoji} ${d.result}`, status];
   });
 
   await core.summary
@@ -53,7 +53,7 @@ async function writeSummary(outcome: Outcome): Promise<void> {
       [
         { data: "Job", header: true },
         { data: "Result", header: true },
-        { data: "Status", header: true },
+        { data: "Allowed", header: true },
       ],
       ...rows,
     ])
@@ -86,35 +86,71 @@ function logDebugDetails(outcome: Outcome): void {
   core.debug(`[are-we-good] Final result: ${outcome.result}`);
 }
 
+const ANSI_GREEN = "\x1b[32m";
+const ANSI_RED = "\x1b[31m";
+const ANSI_RESET = "\x1b[0m";
+
+const GOOD_BANNER = [
+  "  _____   ____   ____   _____ ",
+  " / ____| / __ \\ / __ \\ |  __ \\",
+  "| |  __ | |  | | |  | || |  | |",
+  "| | |_ || |  | | |  | || |  | |",
+  "| |__| || |__| | |__| || |__| |",
+  " \\_____| \\____/ \\____/ |_____/ ",
+];
+
+const NOT_GOOD_BANNER = [
+  " _   _  ____ _______    _____  ____   ____  _____  ",
+  "| \\ | |/ __ \\__   __|  / ____|/ __ \\ / __ \\|  __ \\",
+  "|  \\| | |  | | | |    | |  __| |  | | |  | | |  | |",
+  "| . ` | |  | | | |    | | |_ | |  | | |  | | |  | |",
+  "| |\\  | |__| | | |    | |__| | |__| | |__| | |__| |",
+  "|_| \\_|\\____/  |_|     \\_____|\\____/ \\____/|_____/ ",
+];
+
+function printFinalBanner(result: "success" | "failure"): void {
+  const banner = result === "success" ? GOOD_BANNER : NOT_GOOD_BANNER;
+  const color = result === "success" ? ANSI_GREEN : ANSI_RED;
+  const coloredBanner = banner.map((line) => `${color}${line}${ANSI_RESET}`).join("\n");
+  console.log(`\n${coloredBanner}`);
+}
+
 /** ─── Entry point ───────────────────────────────────────────────────────── */
 
-try {
-  const outcome = evaluateJobs(
-    core.getInput("jobs", { required: true }),
-    core.getInput("allowed-to-skip"),
-    core.getInput("allowed-to-cancel"),
-    core.getInput("allowed-to-fail"),
-  );
-
-  // Write step summary (best-effort — a failure here is logged but not fatal).
-  if (core.getBooleanInput("summary")) {
-    await writeSummary(outcome).catch((err) =>
-      core.warning(`are-we-good: Failed to write step summary: ${err}`),
+async function main(): Promise<void> {
+  try {
+    const outcome = evaluateJobs(
+      core.getInput("jobs", { required: true }),
+      core.getInput("allowed-to-skip"),
+      core.getInput("allowed-to-cancel"),
+      core.getInput("allowed-to-fail"),
     );
-  }
 
-  if (core.isDebug()) {
-    logDebugDetails(outcome);
-  }
+    // Write step summary (best-effort — a failure here is logged but not fatal).
+    if (core.getBooleanInput("summary")) {
+      await writeSummary(outcome).catch((err) =>
+        core.warning(`are-we-good: Failed to write step summary: ${err}`),
+      );
+    }
 
-  core.setOutput("result", outcome.result);
-  core.setOutput("are-we-good", outcome.result === "success" ? "true" : "false");
+    if (core.isDebug()) {
+      logDebugDetails(outcome);
+    }
 
-  if (outcome.result === "success") {
-    core.info(outcome.message);
-  } else {
-    core.setFailed(outcome.message);
+    core.setOutput("result", outcome.result);
+    core.setOutput("are-we-good", outcome.result === "success" ? "true" : "false");
+
+    if (outcome.result === "success") {
+      core.info(outcome.message);
+    } else {
+      core.setFailed(outcome.message);
+    }
+
+    printFinalBanner(outcome.result);
+  } catch (err) {
+    core.setFailed(`are-we-good: ${err}`);
+    printFinalBanner("failure");
   }
-} catch (err) {
-  core.setFailed(`are-we-good: ${err}`);
 }
+
+void main();
