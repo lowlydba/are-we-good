@@ -86,6 +86,34 @@ function logDebugDetails(outcome: Outcome): void {
   core.debug(`[are-we-good] Final result: ${outcome.result}`);
 }
 
+const ANSI_GREEN = "\x1b[32m";
+const ANSI_RED = "\x1b[31m";
+const ANSI_RESET = "\x1b[0m";
+
+const GOOD_BANNER = [
+  "  _____   ____   ____   _____ ",
+  " / ____| / __ \\ / __ \\ |  __ \\",
+  "| |  __ | |  | | |  | || |  | |",
+  "| | |_ || |  | | |  | || |  | |",
+  "| |__| || |__| | |__| || |__| |",
+  " \\_____| \\____/ \\____/ |_____/ ",
+];
+
+const NOT_GOOD_BANNER = [
+  " _   _  ____ _______    _____  ____   ____  _____  ",
+  "| \\ | |/ __ \\__   __|  / ____|/ __ \\ / __ \\|  __ \\",
+  "|  \\| | |  | | | |    | |  __| |  | | |  | | |  | |",
+  "| . ` | |  | | | |    | | |_ | |  | | |  | | |  | |",
+  "| |\\  | |__| | | |    | |__| | |__| | |__| | |__| |",
+  "|_| \\_|\\____/  |_|     \\_____|\\____/ \\____/|_____/ ",
+];
+
+function printFinalBanner(result: "success" | "failure"): void {
+  const banner = result === "success" ? GOOD_BANNER : NOT_GOOD_BANNER;
+  const color = result === "success" ? ANSI_GREEN : ANSI_RED;
+  console.log(`\n${color}${banner.join("\n")}${ANSI_RESET}`);
+}
+
 /** ─── Entry point ───────────────────────────────────────────────────────── */
 
 async function main(): Promise<void> {
@@ -116,8 +144,11 @@ async function main(): Promise<void> {
     } else {
       core.setFailed(outcome.message);
     }
+
+    printFinalBanner(outcome.result);
   } catch (err) {
     core.setFailed(`are-we-good: ${err}`);
+    printFinalBanner("failure");
   }
 }
 
