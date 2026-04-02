@@ -19102,7 +19102,12 @@ function info(message) {
 }
 
 // src/index.ts
-var VALID_JOB_RESULTS = ["success", "failure", "cancelled", "skipped"];
+var VALID_JOB_RESULTS = [
+  "success",
+  "failure",
+  "cancelled",
+  "skipped"
+];
 function evaluateJobs(jobsJson, allowedToSkipRaw, allowedToCancelRaw, allowedToFailRaw) {
   const jobs = parseJobsContext(jobsJson);
   const allowedToSkip = parseAllowlist(allowedToSkipRaw);
@@ -19140,9 +19145,7 @@ function parseJobsContext(raw) {
     }
     const result = value.result;
     if (typeof result !== "string" || !isJobResult(result)) {
-      throw new Error(
-        `'jobs.${name}.result' must be one of: ${VALID_JOB_RESULTS.join(", ")}.`
-      );
+      throw new Error(`'jobs.${name}.result' must be one of: ${VALID_JOB_RESULTS.join(", ")}.`);
     }
     normalized[name] = { result };
   }
