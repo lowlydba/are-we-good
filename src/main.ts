@@ -44,7 +44,7 @@ async function writeSummary(outcome: Outcome): Promise<void> {
     const emoji = RESULT_EMOJI[d.result] ?? "❓";
     const note = acceptanceNote(d);
     const status = d.acceptable ? (note ? `✅ ${note}` : "✅ passed") : "❌ failed";
-    return [`\`${d.name}\``, `${emoji} ${d.result}`, status];
+    return [d.name, `${emoji} ${d.result}`, status];
   });
 
   await core.summary
