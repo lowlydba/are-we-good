@@ -1,0 +1,30 @@
+{
+  "name": "are-we-good",
+  "version": "0.0.0",
+  "description": "Rolls up multiple GitHub Actions job statuses into a single status check",
+  "main": "dist/main.js",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/main.js",
+    "test": "node --test --experimental-test-coverage src/index.test.ts",
+    "format": "prettier --write \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\""
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^3.0.0"
+  },
+  "devDependencies": {
+    "@octokit/webhooks-types": "^7.6.1",
+    "@types/node": "^25.5.0",
+    "esbuild": "^0.27.5",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2"
+  },
+  "overrides": {
+    "undici": "^6.24.1"
+  }
+}

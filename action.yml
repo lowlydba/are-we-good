@@ -1,0 +1,47 @@
+name: are-we-good
+description: >
+  Rolls up multiple GitHub Actions job statuses into a single status check.
+  Run this as a final job (with needs: [...]) so branch protection only needs
+  one required status check instead of listing every matrix job.
+author: lowlydba
+
+inputs:
+  jobs:
+    description: >
+      JSON string of job results — pass via `toJSON(needs)` from the
+      calling workflow. Shape: { [jobName]: { result: string } }
+    required: true
+  allowed-to-skip:
+    description: >
+      Comma-separated list of job names whose "skipped" result is acceptable.
+      Defaults to "*" (all jobs may be skipped).
+    required: false
+    default: ""
+  allowed-to-cancel:
+    description: >
+      Comma-separated list of job names whose "cancelled" result is acceptable.
+      Defaults to "" (cancelled jobs cause failure unless listed here).
+    required: false
+    default: ""
+  allowed-to-fail:
+    description: >
+      Comma-separated list of job names whose "failure" result is acceptable.
+      Defaults to "" (failed jobs cause failure unless listed here).
+    required: false
+    default: ""
+  summary:
+    description: >
+      Write a markdown results table to the GitHub Actions step summary.
+      Set to "false" to disable.
+    required: false
+    default: "true"
+
+outputs:
+  result:
+    description: '"success" | "failure"'
+  are-we-good:
+    description: '"true" | "false"'
+
+runs:
+  using: node24
+  main: dist/main.js
