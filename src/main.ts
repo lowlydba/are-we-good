@@ -53,7 +53,7 @@ async function writeSummary(outcome: Outcome): Promise<void> {
       [
         { data: "Job", header: true },
         { data: "Result", header: true },
-        { data: "Status", header: true },
+        { data: "Allowed", header: true },
       ],
       ...rows,
     ])
