@@ -148,16 +148,20 @@ Enable runner debug mode in GitHub Actions to emit per-job decision logs.
 
 ### Why this action exists
 
-GitHub branch protection rules require you to list *every* required status check by name. When you run a
-[matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) or several
-parallel jobs, that list grows fast — and every time you add or rename a matrix dimension you have to
-update your branch protection settings too.
+The usual native approach is a final job with a `run: |` step that checks `${{ contains(needs.*.result, 'failure') }}` and exits 1. That works for the happy path, but it has hard edges:
 
-In a monorepo, the situation is even worse: jobs that are filtered by changed paths may be skipped on a
-given PR, yet still show up as required checks, so the PR can never merge cleanly without special tooling.
+- It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
+- It gives you no visibility. The step produces no output, no per-job breakdown, and no indication of which job caused the failure.
+- It does not compose. Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
 
-are-we-good solves both problems by running as a final job (with `needs: [job-a, job-b, ...]` and
-`if: always()`) that reports a single pass/fail.
+are-we-good replaces that pattern with a single action call. It handles skipped, cancelled, and failed jobs through explicit allowlists, writes a step summary table with a per-job breakdown, and emits debug logs (when runner debug mode is on) so you can trace every decision.
 
-By default the action writes a step summary table, and in debug mode it logs every per-job decision so you can trace why the final result was chosen.
+GitHub branch protection rules require you to list every required status check by name. When you run a
+[matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) the check
+names include the matrix values, so the list grows every time a dimension changes. are-we-good reports a
+single named check regardless of how many jobs feed into it, which means your branch protection
+configuration never needs to change when you add or rename matrix dimensions.
+
+In a monorepo, jobs filtered by changed paths may be skipped on a given PR yet still show up as required
+checks. are-we-good accepts skipped jobs by default, so filtered jobs never block a merge.
 
