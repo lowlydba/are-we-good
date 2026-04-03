@@ -12,10 +12,12 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 
 ## Table of Contents
 
-- [Tutorial](#tutorial)
-- [How-to guides](#how-to-guides)
-- [Reference](#reference)
-- [Explanation](#explanation)
+- [are-we-good](#are-we-good)
+  - [Table of Contents](#table-of-contents)
+  - [Tutorial](#tutorial)
+  - [How-to Guides](#how-to-guides)
+  - [Reference](#reference)
+  - [Explanation](#explanation)
 
 ## Tutorial
 
@@ -139,22 +141,22 @@ Enable runner debug mode in GitHub Actions to emit per-job decision logs.
 
 ### Calling workflow contract
 
-- Run this action in a final job.
-- Use `needs: [job-a, job-b, ...]`.
-- Use `if: always()`.
-- Pass `jobs: ${{ toJSON(needs) }}`.
+* Run this action in a final job.
+* Use `needs: [job-a, job-b, ...]`.
+* Use `if: always()`.
+* Pass `jobs: ${{ toJSON(needs) }}`.
 
 ## Explanation
 
 ### Why this action exists
 
-The usual native approach is a final job with a `run: |` step that checks `${{ contains(needs.*.result, 'failure') }}` and exits 1. That works for the happy path, but it has hard edges:
+The usual native approach is a final job with a `run: |` step that checks `${{ contains(needs.*.result, 'failure') }}` and exits 1. That works for the happy path, but it isn't ideal:
 
-- It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
-- It gives you no visibility. The step produces no output, no per-job breakdown, and no indication of which job caused the failure.
-- It does not compose. Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
+* It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
+* It gives you no visibility: the step produces no output, no per-job breakdown, and no indication of which job caused the failure.
+* Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
 
-are-we-good replaces that pattern with a single action call. It handles skipped, cancelled, and failed jobs through explicit allowlists, writes a step summary table with a per-job breakdown, and emits debug logs (when runner debug mode is on) so you can trace every decision.
+are-we-good replaces that pattern with a single action that is easy to read and configure. It handles skipped, cancelled, and failed jobs through explicit allowlists, writes a step summary table with a per-job breakdown, and emits debug logs (when runner debug mode is on) so you can trace every decision. CI often benefits from a high information context and this evens the playing field for those who aren't GitHub Workflow experts when debugging failed checks.
 
 GitHub branch protection rules require you to list every required status check by name. When you run a
 [matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) the check
@@ -164,4 +166,3 @@ configuration never needs to change when you add or rename matrix dimensions.
 
 In a monorepo, jobs filtered by changed paths may be skipped on a given PR yet still show up as required
 checks. are-we-good accepts skipped jobs by default, so filtered jobs never block a merge.
-
