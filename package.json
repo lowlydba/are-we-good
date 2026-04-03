@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --minify --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=dist/main.js",
+    "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --minify --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --alias:undici=./src/stub-undici.js --outfile=dist/main.js",
     "test": "node --test --experimental-test-coverage src/index.test.ts",
     "format": "prettier --write \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\""
