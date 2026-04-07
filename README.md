@@ -1,4 +1,4 @@
-# are-we-good
+# are-we-good <!-- omit in toc -->
 
 [![CI](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml/badge.svg)](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,14 +10,12 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 * 🔒 single dependency (Github's `@actions/core` package)
 * 📌 immutable releases — tags are locked via [repository rulesets](https://github.com/lowlydba/are-we-good/rules)
 
-## Table of Contents
+## Table of Contents <!-- omit in toc -->
 
-- [are-we-good](#are-we-good)
-  - [Table of Contents](#table-of-contents)
-  - [Tutorial](#tutorial)
-  - [How-to Guides](#how-to-guides)
-  - [Reference](#reference)
-  - [Explanation](#explanation)
+- [Tutorial](#tutorial)
+- [How-to Guides](#how-to-guides)
+- [Reference](#reference)
+- [Explanation](#explanation)
 
 ## Tutorial
 
@@ -166,3 +164,13 @@ configuration never needs to change when you add or rename matrix dimensions.
 
 In a monorepo, jobs filtered by changed paths may be skipped on a given PR yet still show up as required
 checks. are-we-good accepts skipped jobs by default, so filtered jobs never block a merge.
+
+### Output
+
+#### Job Summary
+
+![github summary screenshot]({4A4C56D7-9C97-4B2B-B423-64EA56329299}.png)
+
+#### Logs
+
+![log output screenshot]({D49B13FE-64B9-4BF1-BE48-D2839584A03B}.png)
