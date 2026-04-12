@@ -52,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # for suzuki-shunsuke/pinact-action to update README.md
-      workflows: write # for suzuki-shunsuke/pinact-action to trigger a workflow re-run if pins were updated
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
