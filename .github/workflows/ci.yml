@@ -21,13 +21,13 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: "package.json"
           cache: npm
 
       - name: Configure npm
-        uses: lowlydba/sustainable-npm@31d51025884f424f58f22e4e6578178bb4e79632 # v3
+        uses: lowlydba/sustainable-npm@31d51025884f424f58f22e4e6578178bb4e79632 # v3.0.0
 
       - name: Install dependencies
         run: npm ci
@@ -59,19 +59,25 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: "package.json"
           cache: npm
 
       - name: Configure npm
-        uses: lowlydba/sustainable-npm@31d51025884f424f58f22e4e6578178bb4e79632 # v3
+        uses: lowlydba/sustainable-npm@31d51025884f424f58f22e4e6578178bb4e79632 # v3.0.0
 
       - name: Install dependencies
         run: npm ci
 
       - name: Check formatting
         run: npm run format:check
+
+      - name: Check action pins
+        uses: suzuki-shunsuke/pinact-action@cf51507d80d4d6522a07348e3d58790290eaf0b6 # v2.0.0
+        with:
+          verify: "true"
+          min_age: "7"
 
       - name: Run zizmor 🌈
         uses: zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8 # v0.5.2
@@ -86,11 +92,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-
       - name: Are we good?
         uses: ./
         with:

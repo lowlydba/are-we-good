@@ -14,8 +14,20 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 
 - [Tutorial](#tutorial)
 - [How-to Guides](#how-to-guides)
+  - [Allow specific jobs to fail or be cancelled](#allow-specific-jobs-to-fail-or-be-cancelled)
+  - [Require explicit skip allowlists](#require-explicit-skip-allowlists)
+  - [Disable the step summary](#disable-the-step-summary)
+  - [Troubleshoot decisions with debug logs](#troubleshoot-decisions-with-debug-logs)
 - [Reference](#reference)
+  - [Inputs](#inputs)
+  - [Outputs](#outputs)
+  - [Decision table](#decision-table)
+  - [Calling workflow contract](#calling-workflow-contract)
 - [Explanation](#explanation)
+  - [Why this action exists](#why-this-action-exists)
+  - [Output](#output)
+    - [Job Summary](#job-summary)
+    - [Logs](#logs)
 
 ## Tutorial
 
@@ -41,8 +53,7 @@ jobs:
     needs: [test]
     if: always()
     steps:
-      - uses: actions/checkout@v6
-      - uses: lowlydba/are-we-good@v1
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
         with:
           jobs: ${{ toJSON(needs) }}
 ```
@@ -77,8 +88,7 @@ jobs:
     needs: [test, lint]
     if: always()
     steps:
-      - uses: actions/checkout@v6
-      - uses: lowlydba/are-we-good@v1
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
         with:
           jobs: ${{ toJSON(needs) }}
           allowed-to-fail: lint
@@ -154,16 +164,11 @@ The usual native approach is a final job with a `run: |` step that checks `${{ c
 * It gives you no visibility: the step produces no output, no per-job breakdown, and no indication of which job caused the failure.
 * Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
 
-are-we-good replaces that pattern with a single action that is easy to read and configure. It handles skipped, cancelled, and failed jobs through explicit allowlists, writes a step summary table with a per-job breakdown, and emits debug logs (when runner debug mode is on) so you can trace every decision. CI often benefits from a high information context and this evens the playing field for those who aren't GitHub Workflow experts when debugging failed checks.
+are-we-good replaces that pattern with a single action that is easy to read and configure. It handles skipped, cancelled, and failed jobs through explicit allowlists and writes a step summary table with a per-job breakdown. When runner debug mode is on, it emits per-job decision logs so you can trace exactly why a check passed or failed, even if you aren't a GitHub Workflow expert.
 
-GitHub branch protection rules require you to list every required status check by name. When you run a
-[matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) the check
-names include the matrix values, so the list grows every time a dimension changes. are-we-good reports a
-single named check regardless of how many jobs feed into it, which means your branch protection
-configuration never needs to change when you add or rename matrix dimensions.
+It also simplifies branch protection. GitHub requires you to list every required status check by name, and when you run a [matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) those names include the matrix values, so the list grows every time a dimension changes. are-we-good reports a single named check regardless of how many jobs feed into it, which means your branch protection configuration stays stable as your matrix evolves.
 
-In a monorepo, jobs filtered by changed paths may be skipped on a given PR yet still show up as required
-checks. are-we-good accepts skipped jobs by default, so filtered jobs never block a merge.
+The same idea applies to monorepos: jobs filtered by changed paths may be skipped on a given PR yet still appear as required checks. Because are-we-good accepts skipped jobs by default, filtered jobs never block a merge.
 
 ### Output
 
