@@ -53,7 +53,7 @@ jobs:
     needs: [test]
     if: always()
     steps:
-      - uses: lowlydba/are-we-good@v1
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
         with:
           jobs: ${{ toJSON(needs) }}
 ```
@@ -88,7 +88,7 @@ jobs:
     needs: [test, lint]
     if: always()
     steps:
-      - uses: lowlydba/are-we-good@v1
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
         with:
           jobs: ${{ toJSON(needs) }}
           allowed-to-fail: lint
