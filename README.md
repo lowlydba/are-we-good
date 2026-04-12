@@ -14,8 +14,20 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 
 - [Tutorial](#tutorial)
 - [How-to Guides](#how-to-guides)
+  - [Allow specific jobs to fail or be cancelled](#allow-specific-jobs-to-fail-or-be-cancelled)
+  - [Require explicit skip allowlists](#require-explicit-skip-allowlists)
+  - [Disable the step summary](#disable-the-step-summary)
+  - [Troubleshoot decisions with debug logs](#troubleshoot-decisions-with-debug-logs)
 - [Reference](#reference)
+  - [Inputs](#inputs)
+  - [Outputs](#outputs)
+  - [Decision table](#decision-table)
+  - [Calling workflow contract](#calling-workflow-contract)
 - [Explanation](#explanation)
+  - [Why this action exists](#why-this-action-exists)
+  - [Output](#output)
+    - [Job Summary](#job-summary)
+    - [Logs](#logs)
 
 ## Tutorial
 
@@ -41,7 +53,6 @@ jobs:
     needs: [test]
     if: always()
     steps:
-      - uses: actions/checkout@v6
       - uses: lowlydba/are-we-good@v1
         with:
           jobs: ${{ toJSON(needs) }}
@@ -77,7 +88,6 @@ jobs:
     needs: [test, lint]
     if: always()
     steps:
-      - uses: actions/checkout@v6
       - uses: lowlydba/are-we-good@v1
         with:
           jobs: ${{ toJSON(needs) }}
