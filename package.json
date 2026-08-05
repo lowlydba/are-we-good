@@ -23,8 +23,5 @@
     "esbuild": "^0.28.1",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2"
-  },
-  "overrides": {
-    "undici": "^6.28.0"
   }
 }
