@@ -6,8 +6,9 @@
  * reports the final result via @actions/core.
  */
 
+import process from "node:process";
 import * as core from "@actions/core";
-import { evaluateJobs, type Outcome, type JobDetail } from "./index.ts";
+import { evaluateJobs, isGithubHostedUbuntuRunner, type Outcome, type JobDetail } from "./index.ts";
 
 /** ─── Summary ───────────────────────────────────────────────────────────── */
 
@@ -115,10 +116,29 @@ function printFinalBanner(result: "success" | "failure"): void {
   console.log(`\n${coloredBanner}`);
 }
 
+/** ─── Runner notices ────────────────────────────────────────────────────── */
+
+/**
+ * Emits a step notice recommending `ubuntu-slim` when running on a
+ * GitHub-hosted `ubuntu-latest` (or other stock Ubuntu) runner, to help
+ * right-size compute for a lightweight action like this one.
+ */
+function notifyUbuntuSlimIfApplicable(): void {
+  if (!core.getBooleanInput("notify-ubuntu-slim")) return;
+
+  if (isGithubHostedUbuntuRunner(process.env)) {
+    core.notice(
+      "Running on ubuntu-latest — consider switching to ubuntu-slim to right-size the runner for this lightweight action.",
+    );
+  }
+}
+
 /** ─── Entry point ───────────────────────────────────────────────────────── */
 
 async function main(): Promise<void> {
   try {
+    notifyUbuntuSlimIfApplicable();
+
     const outcome = evaluateJobs(
       core.getInput("jobs", { required: true }),
       core.getInput("allowed-to-skip"),

@@ -7,8 +7,8 @@
 
 Aggregates multiple job and matrix statuses into a single pass/fail status check.
 
-* 🔒 single dependency (Github's `@actions/core` package)
-* 📌 immutable releases — tags are locked via [repository rulesets](https://github.com/lowlydba/are-we-good/rules)
+- 🔒 single dependency (Github's `@actions/core` package)
+- 📌 immutable releases — tags are locked via [repository rulesets](https://github.com/lowlydba/are-we-good/rules)
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -17,6 +17,7 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
   - [Allow specific jobs to fail or be cancelled](#allow-specific-jobs-to-fail-or-be-cancelled)
   - [Require explicit skip allowlists](#require-explicit-skip-allowlists)
   - [Disable the step summary](#disable-the-step-summary)
+  - [Disable the ubuntu-slim runner notice](#disable-the-ubuntu-slim-runner-notice)
   - [Troubleshoot decisions with debug logs](#troubleshoot-decisions-with-debug-logs)
 - [Reference](#reference)
   - [Inputs](#inputs)
@@ -59,6 +60,7 @@ jobs:
 ```
 
 Expected result:
+
 - `are-we-good` produces a single pass/fail check you can require in branch protection.
 - A markdown step summary is written by default.
 
@@ -113,6 +115,16 @@ with:
   summary: "false"
 ```
 
+### Disable the ubuntu-slim runner notice
+
+By default, are-we-good emits a step notice recommending [`ubuntu-slim`](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) when it detects it's running on a GitHub-hosted `ubuntu-latest` runner. This is a lightweight, mostly I/O-bound action, so a slim runner is usually enough to right-size compute — the same motivation behind [sustainable-npm](https://github.com/lowlydba/sustainable-npm). Set `notify-ubuntu-slim` to `"false"` to opt out.
+
+```yaml
+with:
+  jobs: ${{ toJSON(needs) }}
+  notify-ubuntu-slim: "false"
+```
+
 ### Troubleshoot decisions with debug logs
 
 Enable runner debug mode in GitHub Actions to emit per-job decision logs.
@@ -123,36 +135,37 @@ Enable runner debug mode in GitHub Actions to emit per-job decision logs.
 
 ### Inputs
 
-| Input               | Required | Default  | Description |
-|---------------------|----------|----------|-------------|
-| jobs                |  yes   | —        | JSON string of job results. Pass ${{ toJSON(needs) }} from the calling workflow. |
-| allowed-to-skip     | no       | ""       | Comma-separated list of job names whose skipped result is acceptable. Empty = all jobs may be skipped (wildcard). |
-| allowed-to-cancel   | no       | ""       | Comma-separated list of job names whose cancelled result is acceptable. |
-| allowed-to-fail     | no       | ""       | Comma-separated list of job names whose failure result is acceptable. |
-| summary             | no       | "true"   | Set to "false" to disable the markdown step summary table. |
+| Input              | Required | Default | Description                                                                                                       |
+| ------------------ | -------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| jobs               | yes      | —       | JSON string of job results. Pass ${{ toJSON(needs) }} from the calling workflow.                                  |
+| allowed-to-skip    | no       | ""      | Comma-separated list of job names whose skipped result is acceptable. Empty = all jobs may be skipped (wildcard). |
+| allowed-to-cancel  | no       | ""      | Comma-separated list of job names whose cancelled result is acceptable.                                           |
+| allowed-to-fail    | no       | ""      | Comma-separated list of job names whose failure result is acceptable.                                             |
+| summary            | no       | "true"  | Set to "false" to disable the markdown step summary table.                                                        |
+| notify-ubuntu-slim | no       | "true"  | Set to "false" to disable the ubuntu-slim runner notice.                                                          |
 
 ### Outputs
 
-| Key          | Value                  |
-|--------------|------------------------|
-| result       | "success" \| "failure" |
-| are-we-good  | "true" \| "false"      |
+| Key         | Value                  |
+| ----------- | ---------------------- |
+| result      | "success" \| "failure" |
+| are-we-good | "true" \| "false"      |
 
 ### Decision table
 
-| Result      | Default behavior       | Override input      |
-|-------------|------------------------|---------------------|
-| success     | ✅ always ok           | n/a                 |
-| skipped     | ✅ ok for all jobs     | allowed-to-skip     |
-| cancelled   | ❌ fails               | allowed-to-cancel   |
-| failure     | ❌ fails               | allowed-to-fail     |
+| Result    | Default behavior   | Override input    |
+| --------- | ------------------ | ----------------- |
+| success   | ✅ always ok       | n/a               |
+| skipped   | ✅ ok for all jobs | allowed-to-skip   |
+| cancelled | ❌ fails           | allowed-to-cancel |
+| failure   | ❌ fails           | allowed-to-fail   |
 
 ### Calling workflow contract
 
-* Run this action in a final job.
-* Use `needs: [job-a, job-b, ...]`.
-* Use `if: always()`.
-* Pass `jobs: ${{ toJSON(needs) }}`.
+- Run this action in a final job.
+- Use `needs: [job-a, job-b, ...]`.
+- Use `if: always()`.
+- Pass `jobs: ${{ toJSON(needs) }}`.
 
 ## Explanation
 
@@ -160,9 +173,9 @@ Enable runner debug mode in GitHub Actions to emit per-job decision logs.
 
 The usual native approach is a final job with a `run: |` step that checks `${{ contains(needs.*.result, 'failure') }}` and exits 1. That works for the happy path, but it isn't ideal:
 
-* It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
-* It gives you no visibility: the step produces no output, no per-job breakdown, and no indication of which job caused the failure.
-* Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
+- It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
+- It gives you no visibility: the step produces no output, no per-job breakdown, and no indication of which job caused the failure.
+- Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
 
 are-we-good replaces that pattern with a single action that is easy to read and configure. It handles skipped, cancelled, and failed jobs through explicit allowlists and writes a step summary table with a per-job breakdown. When runner debug mode is on, it emits per-job decision logs so you can trace exactly why a check passed or failed, even if you aren't a GitHub Workflow expert.
 

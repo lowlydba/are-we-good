@@ -37,6 +37,13 @@ inputs:
       Set to "false" to disable.
     required: false
     default: "true"
+  notify-ubuntu-slim:
+    description: >
+      Emit a notice recommending ubuntu-slim when running on a GitHub-hosted
+      ubuntu-latest runner, to help right-size compute for this lightweight
+      action. Set to "false" to disable.
+    required: false
+    default: "true"
 
 outputs:
   result:

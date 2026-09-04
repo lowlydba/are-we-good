@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateJobs } from "./index.ts";
+import { evaluateJobs, isGithubHostedUbuntuRunner } from "./index.ts";
 
 /** Builds the JSON string that `toJSON(needs)` produces in a calling workflow. */
 function makeJobs(map: Record<string, string>): string {
@@ -150,5 +150,50 @@ describe("evaluateJobs", () => {
     const { details } = evaluateJobs(makeJobs({ build: "failure" }), "", "", "");
     assert.equal(details[0].reason, "rejected");
     assert.equal(details[0].acceptable, false);
+  });
+});
+
+describe("isGithubHostedUbuntuRunner", () => {
+  it("github-hosted Linux ubuntu-latest image → true", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Linux",
+        ImageOS: "ubuntu24",
+      }),
+      true,
+    );
+  });
+
+  it("self-hosted runner → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "self-hosted",
+        RUNNER_OS: "Linux",
+        ImageOS: "ubuntu24",
+      }),
+      false,
+    );
+  });
+
+  it("github-hosted non-Linux runner → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Windows",
+        ImageOS: "win22",
+      }),
+      false,
+    );
+  });
+
+  it("missing ImageOS → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Linux",
+      }),
+      false,
+    );
   });
 });

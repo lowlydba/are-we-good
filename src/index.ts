@@ -59,6 +59,30 @@ export interface Outcome {
   readonly details: ReadonlyArray<JobDetail>;
 }
 
+/** ─── Runner detection ──────────────────────────────────────────────────── */
+
+/** The subset of `process.env` needed to detect the runner environment. */
+export interface RunnerEnv {
+  readonly RUNNER_ENVIRONMENT?: string;
+  readonly RUNNER_OS?: string;
+  readonly ImageOS?: string;
+}
+
+/**
+ * Detects whether the workflow is running on a GitHub-hosted `ubuntu-latest`
+ * (or other stock Ubuntu) runner. There's no direct "ubuntu-latest" signal
+ * exposed to actions, so this infers it from `RUNNER_ENVIRONMENT` being
+ * "github-hosted" plus the Linux `ImageOS` value GitHub sets on its hosted
+ * Ubuntu images (e.g. "ubuntu24", "ubuntu22").
+ */
+export function isGithubHostedUbuntuRunner(env: RunnerEnv): boolean {
+  return (
+    env.RUNNER_ENVIRONMENT === "github-hosted" &&
+    env.RUNNER_OS === "Linux" &&
+    !!env.ImageOS?.startsWith("ubuntu")
+  );
+}
+
 /** ─── Public API ─────────────────────────────────────────────────────────── */
 
 /**
