@@ -7,8 +7,9 @@
  */
 
 import process from "node:process";
+import { existsSync } from "node:fs";
 import * as core from "@actions/core";
-import { evaluateJobs, isGithubHostedUbuntuRunner, type Outcome, type JobDetail } from "./index.ts";
+import { evaluateJobs, shouldRecommendUbuntuSlim, type Outcome, type JobDetail } from "./index.ts";
 
 /** ─── Summary ───────────────────────────────────────────────────────────── */
 
@@ -120,13 +121,18 @@ function printFinalBanner(result: "success" | "failure"): void {
 
 /**
  * Emits a step notice recommending `ubuntu-slim` when running on a
- * GitHub-hosted `ubuntu-latest` (or other stock Ubuntu) runner, to help
- * right-size compute for a lightweight action like this one.
+ * GitHub-hosted `ubuntu-latest` (or other stock Ubuntu VM) runner, to help
+ * right-size compute for a lightweight action like this one. `ImageOS`
+ * reports the same value ("ubuntu24", etc.) on both `ubuntu-latest` and
+ * `ubuntu-slim`, so the env-based check alone can't tell them apart — it's
+ * paired with a `/run/.containerenv` check, which only exists inside
+ * `ubuntu-slim`'s containerized runtime, to skip runners that are already slim.
  */
 function notifyUbuntuSlimIfApplicable(): void {
   if (!core.getBooleanInput("notify-ubuntu-slim")) return;
 
-  if (isGithubHostedUbuntuRunner(process.env)) {
+  const isAlreadySlim = existsSync("/run/.containerenv");
+  if (shouldRecommendUbuntuSlim(process.env, isAlreadySlim)) {
     core.notice(
       "Running on ubuntu-latest — consider switching to ubuntu-slim to right-size the runner for this lightweight action.",
     );

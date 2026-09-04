@@ -69,11 +69,15 @@ export interface RunnerEnv {
 }
 
 /**
- * Detects whether the workflow is running on a GitHub-hosted `ubuntu-latest`
- * (or other stock Ubuntu) runner. There's no direct "ubuntu-latest" signal
- * exposed to actions, so this infers it from `RUNNER_ENVIRONMENT` being
- * "github-hosted" plus the Linux `ImageOS` value GitHub sets on its hosted
- * Ubuntu images (e.g. "ubuntu24", "ubuntu22").
+ * Detects whether the workflow is running on a GitHub-hosted Ubuntu runner
+ * (any variant — full VM or slim container). There's no direct
+ * "ubuntu-latest" signal exposed to actions, so this infers it from
+ * `RUNNER_ENVIRONMENT` being "github-hosted" plus the Linux `ImageOS` value
+ * GitHub sets on its hosted Ubuntu images (e.g. "ubuntu24", "ubuntu22").
+ * `ImageOS` alone can't distinguish `ubuntu-latest` from `ubuntu-slim` —
+ * both report the same value — so callers must additionally rule out the
+ * slim container runtime (see `isGithubHostedUbuntuRunner`'s caller in
+ * main.ts, which checks for `/run/.containerenv`).
  */
 export function isGithubHostedUbuntuRunner(env: RunnerEnv): boolean {
   return (
@@ -81,6 +85,18 @@ export function isGithubHostedUbuntuRunner(env: RunnerEnv): boolean {
     env.RUNNER_OS === "Linux" &&
     !!env.ImageOS?.startsWith("ubuntu")
   );
+}
+
+/**
+ * Combines the hosted-Ubuntu check with a container-runtime signal to decide
+ * whether to recommend switching to `ubuntu-slim`. `hasContainerEnvFile`
+ * should reflect whether `/run/.containerenv` exists — that file is only
+ * present inside `ubuntu-slim`'s containerized runtime, not on the
+ * `ubuntu-latest` VM, so its presence means the runner is already slim and
+ * no recommendation is needed.
+ */
+export function shouldRecommendUbuntuSlim(env: RunnerEnv, hasContainerEnvFile: boolean): boolean {
+  return isGithubHostedUbuntuRunner(env) && !hasContainerEnvFile;
 }
 
 /** ─── Public API ─────────────────────────────────────────────────────────── */
