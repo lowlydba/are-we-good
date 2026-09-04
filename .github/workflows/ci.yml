@@ -86,7 +86,7 @@ jobs:
 
   are-we-good:
     name: Are We Good?
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs: [build-test, lint]
     if: always()
     permissions:

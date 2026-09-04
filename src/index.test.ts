@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateJobs } from "./index.ts";
+import { evaluateJobs, isGithubHostedUbuntuRunner, shouldRecommendUbuntuSlim } from "./index.ts";
 
 /** Builds the JSON string that `toJSON(needs)` produces in a calling workflow. */
 function makeJobs(map: Record<string, string>): string {
@@ -150,5 +150,78 @@ describe("evaluateJobs", () => {
     const { details } = evaluateJobs(makeJobs({ build: "failure" }), "", "", "");
     assert.equal(details[0].reason, "rejected");
     assert.equal(details[0].acceptable, false);
+  });
+});
+
+describe("isGithubHostedUbuntuRunner", () => {
+  it("github-hosted Linux ubuntu-latest image → true", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Linux",
+        ImageOS: "ubuntu24",
+      }),
+      true,
+    );
+  });
+
+  it("self-hosted runner → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "self-hosted",
+        RUNNER_OS: "Linux",
+        ImageOS: "ubuntu24",
+      }),
+      false,
+    );
+  });
+
+  it("github-hosted non-Linux runner → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Windows",
+        ImageOS: "win22",
+      }),
+      false,
+    );
+  });
+
+  it("missing ImageOS → false", () => {
+    assert.equal(
+      isGithubHostedUbuntuRunner({
+        RUNNER_ENVIRONMENT: "github-hosted",
+        RUNNER_OS: "Linux",
+      }),
+      false,
+    );
+  });
+});
+
+describe("shouldRecommendUbuntuSlim", () => {
+  const hostedUbuntuEnv = {
+    RUNNER_ENVIRONMENT: "github-hosted",
+    RUNNER_OS: "Linux",
+    ImageOS: "ubuntu24",
+  };
+
+  it("hosted ubuntu-latest VM, no containerenv → true", () => {
+    assert.equal(shouldRecommendUbuntuSlim(hostedUbuntuEnv, false), true);
+  });
+
+  it("hosted ubuntu-slim (containerenv present) → false", () => {
+    // ImageOS reports the same value on ubuntu-latest and ubuntu-slim, so
+    // the containerenv file is what rules out an already-slim runner.
+    assert.equal(shouldRecommendUbuntuSlim(hostedUbuntuEnv, true), false);
+  });
+
+  it("self-hosted, no containerenv → false", () => {
+    assert.equal(
+      shouldRecommendUbuntuSlim(
+        { RUNNER_ENVIRONMENT: "self-hosted", RUNNER_OS: "Linux", ImageOS: "ubuntu24" },
+        false,
+      ),
+      false,
+    );
   });
 });
