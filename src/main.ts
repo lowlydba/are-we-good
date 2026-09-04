@@ -207,7 +207,9 @@ async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      core.warning(`are-we-good: Failed to create check run '${name}' (${response.status}): ${body}`);
+      core.warning(
+        `are-we-good: Failed to create check run '${name}' (${response.status}): ${body}`,
+      );
       return;
     }
 

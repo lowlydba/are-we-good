@@ -64,8 +64,8 @@ inputs:
   github-token:
     description: >
       Token used to create the check run via the Checks API when
-      create-check-run is enabled, e.g. ${{ github.token }}. Requires
-      "checks: write" permission.
+      create-check-run is enabled, e.g. the workflow's default GITHUB_TOKEN.
+      Requires "checks: write" permission.
     required: false
     default: ""
 
