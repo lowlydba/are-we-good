@@ -9,7 +9,13 @@
 import process from "node:process";
 import { existsSync } from "node:fs";
 import * as core from "@actions/core";
-import { evaluateJobs, shouldRecommendUbuntuSlim, type Outcome, type JobDetail } from "./index.ts";
+import {
+  evaluateJobs,
+  shouldRecommendUbuntuSlim,
+  deriveCheckName,
+  type Outcome,
+  type JobDetail,
+} from "./index.ts";
 
 /** ─── Summary ───────────────────────────────────────────────────────────── */
 
@@ -139,6 +145,78 @@ function notifyUbuntuSlimIfApplicable(): void {
   }
 }
 
+/** ─── Custom check run ──────────────────────────────────────────────────── */
+
+/**
+ * Optionally creates a standalone check run via the GitHub Checks API,
+ * named per-workflow by default (see `deriveCheckName`). This sidesteps the
+ * job-name collision footgun: when this action runs from a job with the
+ * same name in two or more workflows, their native job-level checks share
+ * one status-check name, so branch protection is satisfied by either one
+ * succeeding instead of requiring all of them. A custom check run created
+ * here is named independently of the job, so each workflow gets its own
+ * uniquely-named required check.
+ *
+ * Best-effort: failures are logged as warnings and never override the
+ * action's own pass/fail result.
+ */
+async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
+  if (!core.getBooleanInput("create-check-run")) return;
+
+  const token = core.getInput("github-token");
+  if (!token) {
+    core.warning(
+      "are-we-good: 'create-check-run' is enabled but 'github-token' was not provided — skipping check run creation.",
+    );
+    return;
+  }
+
+  const repository = process.env.GITHUB_REPOSITORY;
+  const headSha = process.env.GITHUB_SHA;
+  if (!repository || !headSha) {
+    core.warning(
+      "are-we-good: Missing GITHUB_REPOSITORY/GITHUB_SHA — skipping check run creation.",
+    );
+    return;
+  }
+
+  const name = deriveCheckName(core.getInput("check-name"), process.env);
+  const apiUrl = process.env.GITHUB_API_URL ?? "https://api.github.com";
+
+  try {
+    const response = await fetch(`${apiUrl}/repos/${repository}/check-runs`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "are-we-good-action",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        head_sha: headSha,
+        status: "completed",
+        conclusion: outcome.result === "success" ? "success" : "failure",
+        output: {
+          title: outcome.result === "success" ? "All jobs passed" : "Unacceptable job result(s)",
+          summary: outcome.message,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      core.warning(`are-we-good: Failed to create check run '${name}' (${response.status}): ${body}`);
+      return;
+    }
+
+    core.info(`are-we-good: Created check run '${name}'.`);
+  } catch (err) {
+    core.warning(`are-we-good: Failed to create check run '${name}': ${err}`);
+  }
+}
+
 /** ─── Entry point ───────────────────────────────────────────────────────── */
 
 async function main(): Promise<void> {
@@ -162,6 +240,10 @@ async function main(): Promise<void> {
     if (core.isDebug()) {
       logDebugDetails(outcome);
     }
+
+    await maybeCreateCheckRun(outcome).catch((err) =>
+      core.warning(`are-we-good: Failed to create check run: ${err}`),
+    );
 
     core.setOutput("result", outcome.result);
     core.setOutput("are-we-good", outcome.result === "success" ? "true" : "false");

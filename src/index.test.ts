@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateJobs, isGithubHostedUbuntuRunner, shouldRecommendUbuntuSlim } from "./index.ts";
+import {
+  evaluateJobs,
+  isGithubHostedUbuntuRunner,
+  shouldRecommendUbuntuSlim,
+  deriveCheckName,
+} from "./index.ts";
 
 /** Builds the JSON string that `toJSON(needs)` produces in a calling workflow. */
 function makeJobs(map: Record<string, string>): string {
@@ -223,5 +228,27 @@ describe("shouldRecommendUbuntuSlim", () => {
       ),
       false,
     );
+  });
+});
+
+describe("deriveCheckName", () => {
+  it("no override, workflow name present → '<workflow> / are-we-good'", () => {
+    assert.equal(deriveCheckName("", { GITHUB_WORKFLOW: "CI" }), "CI / are-we-good");
+  });
+
+  it("no override, workflow name missing → 'are-we-good'", () => {
+    assert.equal(deriveCheckName("", {}), "are-we-good");
+  });
+
+  it("blank/whitespace-only workflow name → 'are-we-good'", () => {
+    assert.equal(deriveCheckName("", { GITHUB_WORKFLOW: "   " }), "are-we-good");
+  });
+
+  it("explicit override wins over derived name", () => {
+    assert.equal(deriveCheckName("custom-check", { GITHUB_WORKFLOW: "CI" }), "custom-check");
+  });
+
+  it("override is trimmed", () => {
+    assert.equal(deriveCheckName("  custom-check  ", { GITHUB_WORKFLOW: "CI" }), "custom-check");
   });
 });
