@@ -44,6 +44,30 @@ inputs:
       action. Set to "false" to disable.
     required: false
     default: "true"
+  create-check-run:
+    description: >
+      Create a standalone check run via the GitHub Checks API, named
+      uniquely per workflow by default (see check-name). Use this to avoid
+      the native job-level check name colliding across workflows that call
+      this action from a same-named job — branch protection would otherwise
+      treat those as one check, satisfied by either one succeeding. Requires
+      github-token and a "checks: write" permission. Set to "true" to enable.
+    required: false
+    default: "false"
+  check-name:
+    description: >
+      Name for the check run created when create-check-run is enabled.
+      Defaults to "<workflow name> / are-we-good", which is unique per
+      workflow with no configuration needed. Set to override.
+    required: false
+    default: ""
+  github-token:
+    description: >
+      Token used to create the check run via the Checks API when
+      create-check-run is enabled, e.g. the workflow's default GITHUB_TOKEN.
+      Requires "checks: write" permission.
+    required: false
+    default: ""
 
 outputs:
   result:

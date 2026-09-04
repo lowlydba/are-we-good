@@ -99,6 +99,35 @@ export function shouldRecommendUbuntuSlim(env: RunnerEnv, hasContainerEnvFile: b
   return isGithubHostedUbuntuRunner(env) && !hasContainerEnvFile;
 }
 
+/** ─── Check run naming ──────────────────────────────────────────────────── */
+
+/** The subset of `process.env` needed to derive a default check run name. */
+export interface CheckNameEnv {
+  readonly GITHUB_WORKFLOW?: string;
+}
+
+/**
+ * Derives the name for the optional custom check run created via the Checks
+ * API (see `create-check-run` in main.ts).
+ *
+ * Two (or more) workflows that each run this action from a job named the
+ * same thing (e.g. `are-we-good`) produce colliding native job-level checks —
+ * GitHub treats them as the same required status check, so either one
+ * succeeding satisfies branch protection. Prefixing with the workflow name
+ * (always available via `GITHUB_WORKFLOW`, no user input required) makes the
+ * default name unique per workflow without any extra configuration.
+ *
+ * An explicit `overrideName` always wins, letting callers opt into their own
+ * naming scheme (e.g. to keep a stable name across a workflow rename).
+ */
+export function deriveCheckName(overrideName: string, env: CheckNameEnv): string {
+  const trimmed = overrideName.trim();
+  if (trimmed) return trimmed;
+
+  const workflow = env.GITHUB_WORKFLOW?.trim();
+  return workflow ? `${workflow} / are-we-good` : "are-we-good";
+}
+
 /** ─── Public API ─────────────────────────────────────────────────────────── */
 
 /**

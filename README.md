@@ -18,6 +18,7 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
   - [Require explicit skip allowlists](#require-explicit-skip-allowlists)
   - [Disable the step summary](#disable-the-step-summary)
   - [Disable the ubuntu-slim runner notice](#disable-the-ubuntu-slim-runner-notice)
+  - [Create a uniquely-named check run](#create-a-uniquely-named-check-run)
   - [Troubleshoot decisions with debug logs](#troubleshoot-decisions-with-debug-logs)
 - [Reference](#reference)
   - [Inputs](#inputs)
@@ -125,6 +126,31 @@ with:
   notify-ubuntu-slim: "false"
 ```
 
+### Create a uniquely-named check run
+
+The native check GitHub creates for the `are-we-good` job is named after the job itself. If two or more workflows each call this action from a job with the same name, their checks share that one name — branch protection sees them as a single required check, satisfied when *any one* of them succeeds, not all of them.
+
+Set `create-check-run: "true"` (plus a token) to have the action create its own check run via the Checks API, named `"<workflow name> / are-we-good"` by default — unique per workflow with no extra configuration. Requires a `checks: write` permission.
+
+```yaml
+permissions:
+  checks: write
+
+jobs:
+  are-we-good:
+    runs-on: ubuntu-slim
+    needs: [test]
+    if: always()
+    steps:
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
+        with:
+          jobs: ${{ toJSON(needs) }}
+          create-check-run: "true"
+          github-token: ${{ github.token }}
+```
+
+Then require the created check (e.g. `"CI / are-we-good"`) in branch protection instead of the job-level one. Set `check-name` to override the default name.
+
 ### Troubleshoot decisions with debug logs
 
 Enable runner debug mode in GitHub Actions to emit per-job decision logs.
@@ -143,6 +169,9 @@ Enable runner debug mode in GitHub Actions to emit per-job decision logs.
 | allowed-to-fail    | no       | ""      | Comma-separated list of job names whose failure result is acceptable.                                             |
 | summary            | no       | "true"  | Set to "false" to disable the markdown step summary table.                                                        |
 | notify-ubuntu-slim | no       | "true"  | Set to "false" to disable the ubuntu-slim runner notice.                                                          |
+| create-check-run   | no       | "false" | Set to "true" to create a uniquely-named check run via the Checks API. Requires github-token and `checks: write`. |
+| check-name         | no       | ""      | Overrides the default `"<workflow name> / are-we-good"` name used when create-check-run is enabled.               |
+| github-token       | no       | ""      | Token used to create the check run when create-check-run is enabled, e.g. `${{ github.token }}`.                 |
 
 ### Outputs
 
@@ -182,6 +211,8 @@ are-we-good replaces that pattern with a single action that is easy to read and 
 It also simplifies branch protection. GitHub requires you to list every required status check by name, and when you run a [matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) those names include the matrix values, so the list grows every time a dimension changes. are-we-good reports a single named check regardless of how many jobs feed into it, which means your branch protection configuration stays stable as your matrix evolves.
 
 The same idea applies to monorepos: jobs filtered by changed paths may be skipped on a given PR yet still appear as required checks. Because are-we-good accepts skipped jobs by default, filtered jobs never block a merge.
+
+One caveat: that single named check is named after the job that runs this action, not by the action itself. If multiple workflows each call this action from a same-named job, GitHub treats their checks as one required status check, satisfied when any single one of them succeeds rather than all of them — see [Create a uniquely-named check run](#create-a-uniquely-named-check-run) to avoid this.
 
 ### Output
 
