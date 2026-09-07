@@ -97,7 +97,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Are we good?
-        uses: ./
+        uses: $/.
         with:
           jobs: ${{ toJSON(needs) }}
           create-check-run: "true"
