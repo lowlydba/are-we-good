@@ -128,6 +128,34 @@ export function deriveCheckName(overrideName: string, env: CheckNameEnv): string
   return workflow ? `${workflow} / are-we-good` : "are-we-good";
 }
 
+/** ─── Check run target SHA ──────────────────────────────────────────────── */
+
+/** The subset of `process.env` needed to derive the check run's target SHA. */
+export interface HeadShaEnv {
+  readonly GITHUB_SHA?: string;
+  readonly GITHUB_EVENT_NAME?: string;
+}
+
+/**
+ * Derives the `head_sha` to attach the custom check run to (see
+ * `maybeCreateCheckRun` in main.ts).
+ *
+ * For `pull_request`-triggered workflows, `GITHUB_SHA` is the ephemeral
+ * merge-preview commit created by GitHub for the run — not the PR's actual
+ * head commit — so a check posted there never shows up on the PR and can
+ * never satisfy branch protection. `pullRequestHeadSha` (read from the
+ * `pull_request` webhook payload by the caller) is the real head commit and
+ * takes precedence whenever the event is `pull_request` and it's available;
+ * every other event falls back to `GITHUB_SHA`, which already points at the
+ * commit being built.
+ */
+export function deriveHeadSha(env: HeadShaEnv, pullRequestHeadSha?: string): string | undefined {
+  if (env.GITHUB_EVENT_NAME === "pull_request" && pullRequestHeadSha) {
+    return pullRequestHeadSha;
+  }
+  return env.GITHUB_SHA;
+}
+
 /** ─── Public API ─────────────────────────────────────────────────────────── */
 
 /**

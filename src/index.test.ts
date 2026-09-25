@@ -5,6 +5,7 @@ import {
   isGithubHostedUbuntuRunner,
   shouldRecommendUbuntuSlim,
   deriveCheckName,
+  deriveHeadSha,
 } from "./index.ts";
 
 /** Builds the JSON string that `toJSON(needs)` produces in a calling workflow. */
@@ -250,5 +251,35 @@ describe("deriveCheckName", () => {
 
   it("override is trimmed", () => {
     assert.equal(deriveCheckName("  custom-check  ", { GITHUB_WORKFLOW: "CI" }), "custom-check");
+  });
+});
+
+describe("deriveHeadSha", () => {
+  it("pull_request event with a PR head SHA available → uses the PR head SHA", () => {
+    assert.equal(
+      deriveHeadSha(
+        { GITHUB_EVENT_NAME: "pull_request", GITHUB_SHA: "merge-preview-sha" },
+        "pr-head-sha",
+      ),
+      "pr-head-sha",
+    );
+  });
+
+  it("pull_request event with no PR head SHA available → falls back to GITHUB_SHA", () => {
+    assert.equal(
+      deriveHeadSha({ GITHUB_EVENT_NAME: "pull_request", GITHUB_SHA: "merge-preview-sha" }),
+      "merge-preview-sha",
+    );
+  });
+
+  it("non-pull_request event → uses GITHUB_SHA even if a PR head SHA is passed", () => {
+    assert.equal(
+      deriveHeadSha({ GITHUB_EVENT_NAME: "push", GITHUB_SHA: "push-sha" }, "pr-head-sha"),
+      "push-sha",
+    );
+  });
+
+  it("no GITHUB_SHA and no PR head SHA → undefined", () => {
+    assert.equal(deriveHeadSha({ GITHUB_EVENT_NAME: "pull_request" }), undefined);
   });
 });
