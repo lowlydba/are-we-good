@@ -218,8 +218,8 @@ One caveat: that single named check is named after the job that runs this action
 
 #### Job Summary
 
-![github summary screenshot]({4A4C56D7-9C97-4B2B-B423-64EA56329299}.png)
+![github summary screenshot](assets/github-summary-screenshot.png)
 
 #### Logs
 
-![log output screenshot]({D49B13FE-64B9-4BF1-BE48-D2839584A03B}.png)
+![log output screenshot](assets/log-output-screenshot.png)

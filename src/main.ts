@@ -8,11 +8,13 @@
 
 import process from "node:process";
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import * as core from "@actions/core";
 import {
   evaluateJobs,
   shouldRecommendUbuntuSlim,
   deriveCheckName,
+  deriveHeadSha,
   type Outcome,
   type JobDetail,
 } from "./index.ts";
@@ -148,6 +150,25 @@ function notifyUbuntuSlimIfApplicable(): void {
 /** ─── Custom check run ──────────────────────────────────────────────────── */
 
 /**
+ * Reads the PR's actual head commit SHA from the `pull_request` webhook
+ * payload on disk (`GITHUB_EVENT_PATH`). Returns `undefined` on any failure
+ * (missing path, unreadable file, malformed JSON, absent field) so the
+ * caller can fall back to `GITHUB_SHA`.
+ */
+async function readPullRequestHeadSha(env: NodeJS.ProcessEnv): Promise<string | undefined> {
+  if (env.GITHUB_EVENT_NAME !== "pull_request" || !env.GITHUB_EVENT_PATH) return undefined;
+
+  try {
+    const raw = await readFile(env.GITHUB_EVENT_PATH, "utf8");
+    const payload = JSON.parse(raw) as { pull_request?: { head?: { sha?: string } } };
+    return payload.pull_request?.head?.sha;
+  } catch (err) {
+    core.warning(`are-we-good: Failed to read pull_request head SHA from event payload: ${err}`);
+    return undefined;
+  }
+}
+
+/**
  * Optionally creates a standalone check run via the GitHub Checks API,
  * named per-workflow by default (see `deriveCheckName`). This sidesteps the
  * job-name collision footgun: when this action runs from a job with the
@@ -159,6 +180,12 @@ function notifyUbuntuSlimIfApplicable(): void {
  *
  * Best-effort: failures are logged as warnings and never override the
  * action's own pass/fail result.
+ *
+ * The check run's `head_sha` is resolved via `deriveHeadSha`: on
+ * `pull_request` events, `GITHUB_SHA` points at an ephemeral merge-preview
+ * commit rather than the PR's real head commit, so a check posted there
+ * would never appear on the PR or satisfy branch protection. The real head
+ * SHA is read from the `pull_request` webhook payload instead.
  */
 async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
   if (!core.getBooleanInput("create-check-run")) return;
@@ -172,7 +199,7 @@ async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
   }
 
   const repository = process.env.GITHUB_REPOSITORY;
-  const headSha = process.env.GITHUB_SHA;
+  const headSha = deriveHeadSha(process.env, await readPullRequestHeadSha(process.env));
   if (!repository || !headSha) {
     core.warning(
       "are-we-good: Missing GITHUB_REPOSITORY/GITHUB_SHA — skipping check run creation.",
