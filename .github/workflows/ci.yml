@@ -95,4 +95,3 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
           create-check-run: "true"
-          github-token: ${{ github.token }}
