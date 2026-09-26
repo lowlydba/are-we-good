@@ -96,18 +96,10 @@ function logDebugDetails(outcome: Outcome): void {
   core.debug(`[are-we-good] Final result: ${outcome.result}`);
 }
 
-// Bright variants (92/91), not the plain ANSI colors (32/31): plain red
-// only measures ~3.3:1 contrast against the GitHub Actions log background
-// (#0d1117), below WCAG AA's 4.5:1 minimum for text. Bright green/red clear
-// 10.5:1 / 6.2:1 respectively. The banner text itself ("GOOD"/"NOT GOOD")
-// also conveys the result independent of color.
 const ANSI_GREEN = "\x1b[92m";
 const ANSI_RED = "\x1b[91m";
 const ANSI_RESET = "\x1b[0m";
 
-// Generated via `npm run generate:banners` (figlet, "ANSI Shadow" font).
-// figlet is a devDependency only — these are static strings, so it never
-// ships in dist/. Regenerate with the script if the wording ever changes.
 const GOOD_BANNER = [
   " ██████╗  ██████╗  ██████╗ ██████╗ ",
   "██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗",
