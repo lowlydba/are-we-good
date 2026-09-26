@@ -11,7 +11,8 @@
     "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --minify --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --alias:undici=./src/stub-undici.js --outfile=dist/main.js",
     "test": "node --test --experimental-test-coverage src/index.test.ts",
     "format": "prettier --write \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\""
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.json\" \".github/**/*.yml\"",
+    "generate:banners": "node scripts/generate-banners.mjs"
   },
   "license": "MIT",
   "dependencies": {
@@ -19,8 +20,10 @@
   },
   "devDependencies": {
     "@octokit/webhooks-types": "^7.6.1",
+    "@types/figlet": "^1.7.0",
     "@types/node": "^26.5.1",
     "esbuild": "^0.28.2",
+    "figlet": "^1.11.4",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   }
