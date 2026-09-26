@@ -96,26 +96,26 @@ function logDebugDetails(outcome: Outcome): void {
   core.debug(`[are-we-good] Final result: ${outcome.result}`);
 }
 
-const ANSI_GREEN = "\x1b[32m";
-const ANSI_RED = "\x1b[31m";
+const ANSI_GREEN = "\x1b[92m";
+const ANSI_RED = "\x1b[91m";
 const ANSI_RESET = "\x1b[0m";
 
 const GOOD_BANNER = [
-  "  _____   ____   ____   _____ ",
-  " / ____| / __ \\ / __ \\ |  __ \\",
-  "| |  __ | |  | | |  | || |  | |",
-  "| | |_ || |  | | |  | || |  | |",
-  "| |__| || |__| | |__| || |__| |",
-  " \\_____| \\____/ \\____/ |_____/ ",
+  " ██████╗  ██████╗  ██████╗ ██████╗ ",
+  "██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗",
+  "██║  ███╗██║   ██║██║   ██║██║  ██║",
+  "██║   ██║██║   ██║██║   ██║██║  ██║",
+  "╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝",
+  " ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ",
 ];
 
 const NOT_GOOD_BANNER = [
-  " _   _  ____ _______    _____  ____   ____  _____  ",
-  "| \\ | |/ __ \\__   __|  / ____|/ __ \\ / __ \\|  __ \\",
-  "|  \\| | |  | | | |    | |  __| |  | | |  | | |  | |",
-  "| . ` | |  | | | |    | | |_ | |  | | |  | | |  | |",
-  "| |\\  | |__| | | |    | |__| | |__| | |__| | |__| |",
-  "|_| \\_|\\____/  |_|     \\_____|\\____/ \\____/|_____/ ",
+  "███╗   ██╗ ██████╗ ████████╗     ██████╗  ██████╗  ██████╗ ██████╗ ",
+  "████╗  ██║██╔═══██╗╚══██╔══╝    ██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗",
+  "██╔██╗ ██║██║   ██║   ██║       ██║  ███╗██║   ██║██║   ██║██║  ██║",
+  "██║╚██╗██║██║   ██║   ██║       ██║   ██║██║   ██║██║   ██║██║  ██║",
+  "██║ ╚████║╚██████╔╝   ██║       ╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝",
+  "╚═╝  ╚═══╝ ╚═════╝    ╚═╝        ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ",
 ];
 
 function printFinalBanner(result: "success" | "failure"): void {
@@ -193,7 +193,7 @@ async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
   const token = core.getInput("github-token");
   if (!token) {
     core.warning(
-      "are-we-good: 'create-check-run' is enabled but 'github-token' was not provided — skipping check run creation.",
+      "are-we-good: 'create-check-run' is enabled but 'github-token' resolved to an empty string — skipping check run creation.",
     );
     return;
   }

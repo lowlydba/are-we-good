@@ -8,7 +8,7 @@
 
 Aggregates multiple job and matrix statuses into a single pass/fail status check.
 
-- 🔒 single dependency (Github's `@actions/core` package)
+- 🔒 single dependency (GitHub's `@actions/core` package)
 - 📌 immutable releases — tags are locked via [repository rulesets](https://github.com/lowlydba/are-we-good/rules)
 
 ## Table of Contents <!-- omit in toc -->
@@ -17,29 +17,20 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 - [How-to Guides](#how-to-guides)
   - [Allow specific jobs to fail or be cancelled](#allow-specific-jobs-to-fail-or-be-cancelled)
   - [Require explicit skip allowlists](#require-explicit-skip-allowlists)
-  - [Disable the step summary](#disable-the-step-summary)
-  - [Disable the ubuntu-slim runner notice](#disable-the-ubuntu-slim-runner-notice)
+  - [Toggle the step summary and ubuntu-slim notice](#toggle-the-step-summary-and-ubuntu-slim-notice)
   - [Create a uniquely-named check run](#create-a-uniquely-named-check-run)
   - [Troubleshoot decisions with debug logs](#troubleshoot-decisions-with-debug-logs)
 - [Reference](#reference)
   - [Inputs](#inputs)
   - [Outputs](#outputs)
   - [Decision table](#decision-table)
-  - [Calling workflow contract](#calling-workflow-contract)
 - [Explanation](#explanation)
   - [Why this action exists](#why-this-action-exists)
   - [Output](#output)
-    - [Job Summary](#job-summary)
-    - [Logs](#logs)
 
 ## Tutorial
 
-This quick start shows the smallest complete setup.
-
-1. Add your normal CI jobs.
-2. Add a final `are-we-good` job that depends on those jobs.
-3. Pass `jobs: ${{ toJSON(needs) }}`.
-4. Set `if: always()` so the final job runs even when upstream jobs fail.
+The smallest complete setup: add a final job that depends on your CI jobs, runs `if: always()`, and passes `jobs: ${{ toJSON(needs) }}`.
 
 ```yaml
 jobs:
@@ -61,47 +52,24 @@ jobs:
           jobs: ${{ toJSON(needs) }}
 ```
 
-Expected result:
-
-- `are-we-good` produces a single pass/fail check you can require in branch protection.
-- A markdown step summary is written by default.
+`are-we-good` now produces a single pass/fail check you can require in branch protection, with a markdown step summary written by default.
 
 ## How-to Guides
 
 ### Allow specific jobs to fail or be cancelled
 
-Use allowlists when some jobs are advisory.
+Use allowlists when some jobs are advisory:
 
 ```yaml
-jobs:
-  test:
-    strategy:
-      matrix:
-        node: [22, 24]
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm test
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm run lint
-
-  are-we-good:
-    runs-on: ubuntu-latest
-    needs: [test, lint]
-    if: always()
-    steps:
-      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
-        with:
-          jobs: ${{ toJSON(needs) }}
-          allowed-to-fail: lint
-          allowed-to-cancel: lint
+with:
+  jobs: ${{ toJSON(needs) }}
+  allowed-to-fail: lint
+  allowed-to-cancel: lint
 ```
 
 ### Require explicit skip allowlists
 
-By default, skipped jobs are accepted for all jobs. To require explicit skip permissions, set `allowed-to-skip` to a non-empty list.
+Skipped jobs are accepted for all jobs by default. Set `allowed-to-skip` to require explicit permission per job instead:
 
 ```yaml
 with:
@@ -109,29 +77,20 @@ with:
   allowed-to-skip: docs-only-job
 ```
 
-### Disable the step summary
+### Toggle the step summary and ubuntu-slim notice
+
+By default, are-we-good writes a step summary and — since this is a lightweight, mostly I/O-bound action — recommends [`ubuntu-slim`](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) when it detects a GitHub-hosted `ubuntu-latest` runner (the same motivation as [sustainable-npm](https://github.com/lowlydba/sustainable-npm)). Disable either with `"false"`:
 
 ```yaml
 with:
   jobs: ${{ toJSON(needs) }}
   summary: "false"
-```
-
-### Disable the ubuntu-slim runner notice
-
-By default, are-we-good emits a step notice recommending [`ubuntu-slim`](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) when it detects it's running on a GitHub-hosted `ubuntu-latest` runner. This is a lightweight, mostly I/O-bound action, so a slim runner is usually enough to right-size compute — the same motivation behind [sustainable-npm](https://github.com/lowlydba/sustainable-npm). Set `notify-ubuntu-slim` to `"false"` to opt out.
-
-```yaml
-with:
-  jobs: ${{ toJSON(needs) }}
   notify-ubuntu-slim: "false"
 ```
 
 ### Create a uniquely-named check run
 
-The native check GitHub creates for the `are-we-good` job is named after the job itself. If two or more workflows each call this action from a job with the same name, their checks share that one name — branch protection sees them as a single required check, satisfied when *any one* of them succeeds, not all of them.
-
-Set `create-check-run: "true"` (plus a token) to have the action create its own check run via the Checks API, named `"<workflow name> / are-we-good"` by default — unique per workflow with no extra configuration. Requires a `checks: write` permission.
+The native check for the `are-we-good` job is named after the job itself, so two workflows that both call this action from a same-named job share one required check — satisfied when _either_ succeeds, not both. Set `create-check-run: "true"` with a `checks: write` permission to create a per-workflow check instead, named `"<workflow name> / are-we-good"` by default:
 
 ```yaml
 permissions:
@@ -147,80 +106,69 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
           create-check-run: "true"
-          github-token: ${{ github.token }}
 ```
 
-Then require the created check (e.g. `"CI / are-we-good"`) in branch protection instead of the job-level one. Set `check-name` to override the default name.
+Then require the created check (e.g. `"CI / are-we-good"`) in branch protection instead of the job-level one. Set `check-name` to override the default name, or `github-token` to use a token other than `${{ github.token }}`.
 
 ### Troubleshoot decisions with debug logs
 
-Enable runner debug mode in GitHub Actions to emit per-job decision logs.
-
-- Docs: [Enable debug logging](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/enabling-debug-logging)
+Enable [runner debug logging](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/enabling-debug-logging) to emit per-job decision logs.
 
 ## Reference
 
 ### Inputs
 
-| Input              | Required | Default | Description                                                                                                       |
-| ------------------ | -------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| jobs               | yes      | —       | JSON string of job results. Pass ${{ toJSON(needs) }} from the calling workflow.                                  |
-| allowed-to-skip    | no       | ""      | Comma-separated list of job names whose skipped result is acceptable. Empty = all jobs may be skipped (wildcard). |
-| allowed-to-cancel  | no       | ""      | Comma-separated list of job names whose cancelled result is acceptable.                                           |
-| allowed-to-fail    | no       | ""      | Comma-separated list of job names whose failure result is acceptable.                                             |
-| summary            | no       | "true"  | Set to "false" to disable the markdown step summary table.                                                        |
-| notify-ubuntu-slim | no       | "true"  | Set to "false" to disable the ubuntu-slim runner notice.                                                          |
-| create-check-run   | no       | "false" | Set to "true" to create a uniquely-named check run via the Checks API. Requires github-token and `checks: write`. |
-| check-name         | no       | ""      | Overrides the default `"<workflow name> / are-we-good"` name used when create-check-run is enabled.               |
-| github-token       | no       | ""      | Token used to create the check run when create-check-run is enabled, e.g. `${{ github.token }}`.                 |
+| Input                | Required | Default               | Description                                                                                                         |
+| -------------------- | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `jobs`               | yes      | —                     | JSON string of job results. Pass `${{ toJSON(needs) }}` from the calling workflow.                                  |
+| `allowed-to-skip`    | no       | `""`                  | Comma-separated job names whose `skipped` result is acceptable. Empty = all jobs may be skipped (wildcard).         |
+| `allowed-to-cancel`  | no       | `""`                  | Comma-separated job names whose `cancelled` result is acceptable.                                                   |
+| `allowed-to-fail`    | no       | `""`                  | Comma-separated job names whose `failure` result is acceptable.                                                     |
+| `summary`            | no       | `true`                | Set to `false` to disable the markdown step summary table.                                                          |
+| `notify-ubuntu-slim` | no       | `true`                | Set to `false` to disable the ubuntu-slim runner notice.                                                            |
+| `create-check-run`   | no       | `false`               | Set to `true` to create a uniquely-named check run via the Checks API. Requires `github-token` and `checks: write`. |
+| `check-name`         | no       | `""`                  | Overrides the default `"<workflow name> / are-we-good"` name used when `create-check-run` is enabled.               |
+| `github-token`       | no       | `${{ github.token }}` | Token used to create the check run when `create-check-run` is enabled. Requires `checks: write`.                    |
 
 ### Outputs
 
-| Key         | Value                  |
-| ----------- | ---------------------- |
-| result      | "success" \| "failure" |
-| are-we-good | "true" \| "false"      |
+| Key           | Value                      |
+| ------------- | -------------------------- |
+| `result`      | `"success"` \| `"failure"` |
+| `are-we-good` | `"true"` \| `"false"`      |
 
 ### Decision table
 
-| Result    | Default behavior   | Override input    |
-| --------- | ------------------ | ----------------- |
-| success   | ✅ always ok       | n/a               |
-| skipped   | ✅ ok for all jobs | allowed-to-skip   |
-| cancelled | ❌ fails           | allowed-to-cancel |
-| failure   | ❌ fails           | allowed-to-fail   |
-
-### Calling workflow contract
-
-- Run this action in a final job.
-- Use `needs: [job-a, job-b, ...]`.
-- Use `if: always()`.
-- Pass `jobs: ${{ toJSON(needs) }}`.
+| Result      | Default behavior   | Override input      |
+| ----------- | ------------------ | ------------------- |
+| `success`   | ✅ always ok       | n/a                 |
+| `skipped`   | ✅ ok for all jobs | `allowed-to-skip`   |
+| `cancelled` | ❌ fails           | `allowed-to-cancel` |
+| `failure`   | ❌ fails           | `allowed-to-fail`   |
 
 ## Explanation
 
 ### Why this action exists
 
-The usual native approach is a final job with a `run: |` step that checks `${{ contains(needs.*.result, 'failure') }}` and exits 1. That works for the happy path, but it isn't ideal:
+The usual native approach — a final job with `if: always()` and `${{ contains(needs.*.result, 'failure') }}` — treats every skipped or cancelled job as a failure unless you hand-write a conditional for each one, and it grows fragile once you add matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail. It also produces no per-job breakdown, so there's no visibility into which job caused the failure.
 
-- It treats every skipped or cancelled job as a failure unless you manually handle each case with nested conditionals.
-- It gives you no visibility: the step produces no output, no per-job breakdown, and no indication of which job caused the failure.
-- Once you have matrix jobs, path-filtered jobs, or advisory jobs that are allowed to fail, the if-expression grows into something fragile and hard to review.
+are-we-good replaces that pattern with one action: allowlists for skipped/cancelled/failed jobs, a step summary table, and per-job debug logs when runner debug mode is on.
 
-are-we-good replaces that pattern with a single action that is easy to read and configure. It handles skipped, cancelled, and failed jobs through explicit allowlists and writes a step summary table with a per-job breakdown. When runner debug mode is on, it emits per-job decision logs so you can trace exactly why a check passed or failed, even if you aren't a GitHub Workflow expert.
+It also stabilizes branch protection. GitHub requires listing every required check by name, and [matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) job names include the matrix values — so that list grows every time a dimension changes. are-we-good reports one named check regardless of how many jobs feed into it, so branch protection stays stable as the matrix evolves. The same applies to monorepos: path-filtered jobs may be skipped on a given PR yet still be required — since are-we-good accepts skipped jobs by default, filtered jobs never block a merge.
 
-It also simplifies branch protection. GitHub requires you to list every required status check by name, and when you run a [matrix build](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) those names include the matrix values, so the list grows every time a dimension changes. are-we-good reports a single named check regardless of how many jobs feed into it, which means your branch protection configuration stays stable as your matrix evolves.
-
-The same idea applies to monorepos: jobs filtered by changed paths may be skipped on a given PR yet still appear as required checks. Because are-we-good accepts skipped jobs by default, filtered jobs never block a merge.
-
-One caveat: that single named check is named after the job that runs this action, not by the action itself. If multiple workflows each call this action from a same-named job, GitHub treats their checks as one required status check, satisfied when any single one of them succeeds rather than all of them — see [Create a uniquely-named check run](#create-a-uniquely-named-check-run) to avoid this.
+One caveat: that single check is named after the job that runs this action, not the action itself — see [Create a uniquely-named check run](#create-a-uniquely-named-check-run) if multiple workflows share a job name.
 
 ### Output
 
-#### Job Summary
+A markdown step summary is written by default:
 
-![github summary screenshot](assets/github-summary-screenshot.png)
+| Job          | Result     | Allowed   |
+| ------------ | ---------- | --------- |
+| `build-test` | ✅ success | ✅ passed |
+| `lint`       | ✅ success | ✅ passed |
 
-#### Logs
+> are-we-good: ✅ All jobs passed.
+
+The final result is also printed to the log:
 
 ![log output screenshot](assets/log-output-screenshot.png)
