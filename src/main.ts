@@ -193,7 +193,7 @@ async function maybeCreateCheckRun(outcome: Outcome): Promise<void> {
   const token = core.getInput("github-token");
   if (!token) {
     core.warning(
-      "are-we-good: 'create-check-run' is enabled but 'github-token' was not provided — skipping check run creation.",
+      "are-we-good: 'create-check-run' is enabled but 'github-token' resolved to an empty string — skipping check run creation.",
     );
     return;
   }

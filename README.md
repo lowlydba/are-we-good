@@ -90,7 +90,7 @@ with:
 
 ### Create a uniquely-named check run
 
-The native check for the `are-we-good` job is named after the job itself, so two workflows that both call this action from a same-named job share one required check — satisfied when *either* succeeds, not both. Set `create-check-run: "true"` with a `checks: write` permission to create a per-workflow check instead, named `"<workflow name> / are-we-good"` by default:
+The native check for the `are-we-good` job is named after the job itself, so two workflows that both call this action from a same-named job share one required check — satisfied when _either_ succeeds, not both. Set `create-check-run: "true"` with a `checks: write` permission to create a per-workflow check instead, named `"<workflow name> / are-we-good"` by default:
 
 ```yaml
 permissions:
@@ -106,10 +106,9 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
           create-check-run: "true"
-          github-token: ${{ github.token }}
 ```
 
-Then require the created check (e.g. `"CI / are-we-good"`) in branch protection instead of the job-level one. Set `check-name` to override the default name.
+Then require the created check (e.g. `"CI / are-we-good"`) in branch protection instead of the job-level one. Set `check-name` to override the default name, or `github-token` to use a token other than `${{ github.token }}`.
 
 ### Troubleshoot decisions with debug logs
 
@@ -119,33 +118,33 @@ Enable [runner debug logging](https://docs.github.com/en/actions/monitoring-and-
 
 ### Inputs
 
-| Input               | Required | Default | Description                                                                                                       |
-| -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| `jobs`                | yes      | —       | JSON string of job results. Pass `${{ toJSON(needs) }}` from the calling workflow.                                |
-| `allowed-to-skip`     | no       | `""`    | Comma-separated job names whose `skipped` result is acceptable. Empty = all jobs may be skipped (wildcard).       |
-| `allowed-to-cancel`   | no       | `""`    | Comma-separated job names whose `cancelled` result is acceptable.                                                 |
-| `allowed-to-fail`     | no       | `""`    | Comma-separated job names whose `failure` result is acceptable.                                                   |
-| `summary`             | no       | `true`  | Set to `false` to disable the markdown step summary table.                                                        |
-| `notify-ubuntu-slim`  | no       | `true`  | Set to `false` to disable the ubuntu-slim runner notice.                                                          |
-| `create-check-run`    | no       | `false` | Set to `true` to create a uniquely-named check run via the Checks API. Requires `github-token` and `checks: write`. |
-| `check-name`          | no       | `""`    | Overrides the default `"<workflow name> / are-we-good"` name used when `create-check-run` is enabled.             |
-| `github-token`        | no       | `""`    | Token used to create the check run when `create-check-run` is enabled, e.g. `${{ github.token }}`.                |
+| Input                | Required | Default               | Description                                                                                                         |
+| -------------------- | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `jobs`               | yes      | —                     | JSON string of job results. Pass `${{ toJSON(needs) }}` from the calling workflow.                                  |
+| `allowed-to-skip`    | no       | `""`                  | Comma-separated job names whose `skipped` result is acceptable. Empty = all jobs may be skipped (wildcard).         |
+| `allowed-to-cancel`  | no       | `""`                  | Comma-separated job names whose `cancelled` result is acceptable.                                                   |
+| `allowed-to-fail`    | no       | `""`                  | Comma-separated job names whose `failure` result is acceptable.                                                     |
+| `summary`            | no       | `true`                | Set to `false` to disable the markdown step summary table.                                                          |
+| `notify-ubuntu-slim` | no       | `true`                | Set to `false` to disable the ubuntu-slim runner notice.                                                            |
+| `create-check-run`   | no       | `false`               | Set to `true` to create a uniquely-named check run via the Checks API. Requires `github-token` and `checks: write`. |
+| `check-name`         | no       | `""`                  | Overrides the default `"<workflow name> / are-we-good"` name used when `create-check-run` is enabled.               |
+| `github-token`       | no       | `${{ github.token }}` | Token used to create the check run when `create-check-run` is enabled. Requires `checks: write`.                    |
 
 ### Outputs
 
-| Key           | Value                  |
-| ------------- | ---------------------- |
+| Key           | Value                      |
+| ------------- | -------------------------- |
 | `result`      | `"success"` \| `"failure"` |
 | `are-we-good` | `"true"` \| `"false"`      |
 
 ### Decision table
 
-| Result      | Default behavior     | Override input      |
-| ----------- | --------------------- | -------------------- |
-| `success`   | ✅ always ok           | n/a                  |
-| `skipped`   | ✅ ok for all jobs     | `allowed-to-skip`    |
-| `cancelled` | ❌ fails               | `allowed-to-cancel`  |
-| `failure`   | ❌ fails               | `allowed-to-fail`    |
+| Result      | Default behavior   | Override input      |
+| ----------- | ------------------ | ------------------- |
+| `success`   | ✅ always ok       | n/a                 |
+| `skipped`   | ✅ ok for all jobs | `allowed-to-skip`   |
+| `cancelled` | ❌ fails           | `allowed-to-cancel` |
+| `failure`   | ❌ fails           | `allowed-to-fail`   |
 
 ## Explanation
 
