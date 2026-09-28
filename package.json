@@ -21,7 +21,7 @@
   "devDependencies": {
     "@octokit/webhooks-types": "^7.6.1",
     "@types/figlet": "^1.7.0",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.2",
     "esbuild": "^0.28.2",
     "figlet": "^1.11.4",
     "prettier": "^3.9.6",
