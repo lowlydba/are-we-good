@@ -1,5 +1,3 @@
-# are-we-good <!-- omit in toc -->
-
 ![are-we-good: job and matrix statuses rolled up into one pass/fail check](assets/hero.png)
 
 [![CI](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml/badge.svg)](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml)
