@@ -176,4 +176,4 @@ The final result is also printed to the log:
 
 ## Related
 
-- [what-changed](https://github.com/lowlysre/what-changed) reports the files a push, pull request, or merge group changed, filtered by glob patterns, with zero runtime dependencies and no build step.
+- [are-we-changed](https://github.com/lowlysre/are-we-changed) reports the files a push, pull request, or merge group changed, filtered by glob patterns, with zero runtime dependencies and no build step.
