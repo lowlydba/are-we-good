@@ -1,4 +1,4 @@
-# are-we-good <!-- omit in toc -->
+![are-we-good: job and matrix statuses rolled up into one pass/fail check](assets/hero.png)
 
 [![CI](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml/badge.svg)](https://github.com/lowlydba/are-we-good/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -27,6 +27,7 @@ Aggregates multiple job and matrix statuses into a single pass/fail status check
 - [Explanation](#explanation)
   - [Why this action exists](#why-this-action-exists)
   - [Output](#output)
+- [Related](#related)
 
 ## Tutorial
 
@@ -172,3 +173,7 @@ A markdown step summary is written by default:
 The final result is also printed to the log:
 
 ![log output screenshot](assets/log-output-screenshot.png)
+
+## Related
+
+- [what-changed](https://github.com/lowlysre/what-changed) reports the files a push, pull request, or merge group changed, filtered by glob patterns, with zero runtime dependencies and no build step.
