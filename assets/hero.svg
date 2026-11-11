@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 260" width="1000" height="260" role="img" aria-labelledby="title desc">
+  <title id="title">are-we-good</title>
+  <desc id="desc">are-we-good rolls up job and matrix statuses into one pass/fail check. One dependency, immutable releases, step summary.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10212b"/>
+      <stop offset="1" stop-color="#16303a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.1" r="0.7">
+      <stop offset="0" stop-color="#7ee0b5" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#7ee0b5" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="frame"><rect width="1000" height="260" rx="16"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1000" height="260" fill="url(#bg)"/>
+    <rect width="1000" height="260" fill="url(#glow)"/>
+    <rect width="8" height="260" fill="#7ee0b5"/>
+  </g>
+
+  <g font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+    <text x="56" y="112" font-size="64" font-weight="700" fill="#f2e3c6">are<tspan fill="#7ee0b5">-</tspan>we<tspan fill="#7ee0b5">-</tspan>good</text>
+    <text x="58" y="150" font-size="19" fill="#b9c7c9">Job and matrix statuses rolled up into one pass/fail check.</text>
+
+    <g font-size="13" font-weight="600" text-anchor="middle" fill="#f2e3c6">
+      <rect x="56" y="180" width="116" height="30" rx="15" fill="#f2e3c6" fill-opacity="0.08" stroke="#f2e3c6" stroke-opacity="0.35"/>
+      <text x="114" y="200">1 dependency</text>
+      <rect x="184" y="180" width="148" height="30" rx="15" fill="#f2e3c6" fill-opacity="0.08" stroke="#f2e3c6" stroke-opacity="0.35"/>
+      <text x="258" y="200">immutable releases</text>
+      <rect x="344" y="180" width="118" height="30" rx="15" fill="#f2e3c6" fill-opacity="0.08" stroke="#f2e3c6" stroke-opacity="0.35"/>
+      <text x="403" y="200">step summary</text>
+    </g>
+  </g>
+
+  <line x1="640" y1="44" x2="640" y2="216" stroke="#f2e3c6" stroke-opacity="0.15"/>
+
+  <g font-family="Consolas, Menlo, 'Liberation Mono', monospace" font-size="16">
+    <g transform="translate(676 42)">
+      <rect width="28" height="28" rx="6" fill="#7cc4f0"/>
+      <path d="M7.5 14.5l4.5 4.5 8.5-9.5" fill="none" stroke="#10212b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="20" fill="#7cc4f0">test: success</text>
+    </g>
+    <g transform="translate(676 86)">
+      <rect width="28" height="28" rx="6" fill="#9fb0b3"/>
+      <path d="M8 14h12" fill="none" stroke="#10212b" stroke-width="3" stroke-linecap="round"/>
+      <text x="44" y="20" fill="#9fb0b3">docs: skipped</text>
+    </g>
+    <g transform="translate(676 130)">
+      <rect width="28" height="28" rx="6" fill="#f6c453"/>
+      <path d="M9 9l10 10M19 9l-10 10" fill="none" stroke="#10212b" stroke-width="3" stroke-linecap="round"/>
+      <text x="44" y="20" fill="#f6c453">lint: allowed to fail</text>
+    </g>
+    <g transform="translate(676 174)">
+      <rect x="-10" y="-8" width="294" height="44" rx="10" fill="#7ee0b5" fill-opacity="0.1" stroke="#7ee0b5" stroke-opacity="0.6"/>
+      <rect width="28" height="28" rx="6" fill="#7ee0b5"/>
+      <path d="M7.5 14.5l4.5 4.5 8.5-9.5" fill="none" stroke="#10212b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="20" font-weight="700" fill="#7ee0b5">are-we-good</text>
+    </g>
+  </g>
+</svg>
